@@ -1,0 +1,45 @@
+TO RUN SOAR, PLEASE INSTALL THE FOLLOWING:
+
+Python <-- MUST MANUALLY DOWNLOAD FIRST THEN YOU CAN US SCRIPT TO QUICKLY INSTALL OTHERS.
+pyttsx3  
+SpeechRecognition  
+pyaudio 
+psutil 
+
+Also, there is a install.py script to quickly install all of them.
+
+Then run:
+
+soar_main.py (recommended you run it with Visual Studio Code)
+
+
+SUPPORTED SYSTEMS:
+Mac: Works  
+Windows: Works
+Linux: Not supported  
+
+
+NOTES:
+- Expect bugs (this is early beta software)
+- Voice input and output are supported
+- You can type commands or use voice
+
+
+COMMANDS:
+Type /help when running to see all commands
+
+
+AUTOCODE:
+- Can run in background when enabled
+- Enable with: autocode on
+- Default: OFF
+
+PERSONALITY
+- GO TO https://console.groq.com/keys and get a api key and paste it in where it says in the script API_KEY_HERE (you can do control + f/command + f to quickly search for it). Then it should work.
+- He will now remember past chats and commands will still work as usual.
+- Groq key only works online
+- Otherwise there is a personality system added.
+
+VOICE:
+- Voice system is available
+- You can toggle it inside the program

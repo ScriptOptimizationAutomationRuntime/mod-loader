@@ -1,0 +1,22 @@
+Here's some weird commands to enter so I will show you how to enter them.
+
+To create a new file do:
+newfile "pathhere" contents here
+
+To do a math expression do calculate or calc.
+
+To create a python project do 
+
+create ___ project default/web/game/converter "file directory here" name
+
+Notes:To quickly just get default just do create ___ project "file directory here" name
+
+ALSO THE WEB PROJECT DOESN'T HAVE THE DEFAULT/WEB/GAME/CONVERTER FEATURE.
+ 
+(Python, javascript, java, bash, web project generator.)
+
+Code help "file directory"
+
+*help is used for other commands*
+
+Will be added onto...

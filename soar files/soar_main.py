@@ -2,8 +2,8 @@
 # SOAR MAIN SYSTEM
 # SOAR - Script Optimization and Automation Runtime
 # Made by Philip Kluz
-# Version 1.00.5 Early Beta
-# Modded Version
+# Version 1.00.6 Early Beta
+# DO NOT EDIT
 # =====================================================
 
 from __future__ import annotations
@@ -31,7 +31,8 @@ from urllib.parse import quote_plus
 import urllib.request
 import ssl
 import certifi
-import importlib.util
+
+
 
 _last_resource_alert = 0
 RESOURCE_COOLDOWN = 10  #seconds
@@ -65,6 +66,11 @@ try:
     from openai import OpenAI
 except ImportError:
     OpenAI = None
+
+try:
+    import rsms  # type: ignore
+except Exception:
+    rsms = None
 
 APP_NAME = "SOAR"
 BASE_DIR = Path(__file__).resolve().parent
@@ -245,8 +251,8 @@ def load_settings():
                 loaded = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
                 if isinstance(loaded, dict):
                     data.update(loaded)
-        except Exception:
-            pass
+        except Exception as e:
+         print(f"[{stamp()}] [SETTINGS ERROR] Failed to load configuration: {e}")
 
         SETTINGS_CACHE = data
         return dict(data)
@@ -460,9 +466,10 @@ def load_soar_mods():
                 except Exception as e:
                     print(f"Error loading mod {mod_name}: {e}")
 
-    print("Mods loaded successfully.")
+    print("Mods above.")
 
 load_soar_mods() #mods end 1
+
 
 def show_voice_status():
     pref = get_voice_preference()
@@ -1295,6 +1302,7 @@ def analyze_code_syntax(file_path):
         return f"Could not analyze file structure: {e}"
 
 def reply_to(user_text):
+    
     text = user_text.strip().lower()
     parts = [] 
     if not text:
@@ -1895,6 +1903,30 @@ def reply_to(user_text):
             print(f"Error creating project: {e}")
             return maybe_address_user("I encountered an error creating the Java project.")
         
+    if text == "rsms run" or text == "resource monitor":
+        try:
+            import importlib
+            import rsms # type: ignore
+            importlib.reload(rsms)
+            
+            print("\n================ SOAR RSMS LAUNCHER ================")
+            print("[SOAR] Spawning standalone window environment...")
+            
+            success = rsms.launch()
+            
+            if success:
+                print("[SOAR] RSMS context moved cleanly to external terminal workspace.")
+                print("====================================================")
+                return maybe_address_user("Resource monitor launched in a new window.")
+            else:
+                print("[SOAR] Unable to find a compatible GUI terminal window client.")
+                print("====================================================")
+                return maybe_address_user("I could not spawn a new window on this host machine.")
+                
+        except Exception as e:
+            print(f"RSMS Launch Error: {e}")
+            return maybe_address_user("The resource management system module is unavailable.")
+        
     if text.startswith("view project ") or text.startswith("tree "):
         try:
             if text.startswith("view project "):
@@ -2399,7 +2431,7 @@ def reply_to(user_text):
                             "You are SOAR (Script Optimization and Automation Runtime), an advanced, intelligent local desktop AI assistant "
                             "created by Philip Kluz. You are running on a Mac/Windows. You are a custom automated runtime helper built with pure Python.\n\n"
                             "Your current system specifications and architectural capabilities include:\n"
-                            "- Version: 1.00.5 Early Beta.\n"
+                            "- Version: 1.00.6 Early Beta.\n"
                             "- AVSS (Anti Virus SOAR Software): A localized, active protection shield running on a daemon thread monitoring background processes and providing security hardening.\n"
                             "- ACHDS (Advanced Code Helper Diagnostic System): Files outside of soar if upon users request can be fixed.\n"
                             "- CSRS (Connection Server Request System): Can try to widen signal of wifi or network, can also give diagnostics on the wifi.\n"
@@ -3145,7 +3177,7 @@ def emergency_shutdown():
     except Exception:
         sys.exit(0)
 
-def process_command(raw, from_voice=False): #mod start 2
+def process_command(raw, from_voice=False): #mods start 2
     if shutting_down or stop_event.is_set():
         return
 
@@ -4621,7 +4653,7 @@ def main():
     print("Voice starts automatically if your mic libraries are ready.\n")
 
     try:
-        speak("SOAR Booted, version 1.00.5 Modded Edition. Voice is on.", allow_sound=True)
+        speak("SOAR Booted, version 1.00.6. Voice is on.", allow_sound=True)
     except Exception:
         pass
 

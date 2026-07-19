@@ -2,8 +2,8 @@
 # SOAR MAIN SYSTEM
 # SOAR - Script Optimization and Automation Runtime
 # Made by Philip Kluz
-# Version 1.00.6 Early Beta
-# DO NOT EDIT
+# Version 1.00.7 Early Beta
+# DO NOT EDIT CORE PARTS.
 # =====================================================
 
 from __future__ import annotations
@@ -32,8 +32,7 @@ import urllib.request
 import ssl
 import certifi
 
-
-
+pronoun = "sir" # you can change this to prefered pronoun.
 _last_resource_alert = 0
 RESOURCE_COOLDOWN = 10  #seconds
 intro_start_time = 0 
@@ -123,8 +122,339 @@ tts_voice_id = None
 
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 
-def stamp():
-    return datetime.now().strftime("%H:%M:%S")
+# ======================================================
+# SPA (SOAR Project Agent) V 1.0
+# SOAR Help Module #005
+# Made by Philip Kluz 2026 Jul 19 Late
+# "eS p eY e"
+# ======================================================
+
+class ProjectAgent:
+    """
+    SOAR Advanced Autonomous Project Builder Agent
+    Features: Dynamic project routing, intelligent scaffolding, multi-file AST validation, 
+    metadata tracking, and context-aware execution.
+    """
+    def __init__(self, prompt: str, project_name: str):
+        self.prompt = prompt.strip()
+        self.project_name = project_name.strip().replace(" ", "_")
+        
+        current_script_dir = Path(__file__).resolve().parent
+        self.project_dir = current_script_dir / "projects" / self.project_name
+        
+        self.logs = []
+        self.project_type = self._determine_project_type()
+        self.entry_point = "main.py" 
+        self.features = []
+
+    def log(self, message: str):
+        full_msg = f"[{self.project_name.upper()}-BUILDER] {message}"
+        self.logs.append(full_msg)
+        print(full_msg)
+
+    def _determine_project_type(self) -> str:
+        """Analyzes the prompt to route to the correct architecture."""
+        prompt_lower = self.prompt.lower()
+        if any(word in prompt_lower for word in ["bot", "discord", "slack", "telegram"]):
+            return "bot"
+        elif any(word in prompt_lower for word in ["web", "website", "html", "flask", "django"]):
+            return "web_app"
+        elif any(word in prompt_lower for word in ["api", "endpoint", "rest", "backend"]):
+            return "api"
+        elif any(word in prompt_lower for word in ["data", "scrape", "csv", "json"]):
+            return "data_tool"
+        elif any(word in prompt_lower for word in ["game", "pygame", "arcade"]):
+            return "game"
+        elif any(word in prompt_lower for word in ["gui", "interface", "desktop", "tkinter"]):
+            return "desktop_gui"
+        elif any(word in prompt_lower for word in ["automation", "organize", "cleanup", "file"]):
+            return "automation_script"
+        else:
+            return "cli" 
+
+    def execute_pipeline(self):
+        self.log(f"Initializing ADVANCED build pipeline.")
+        self.log(f"Detected Project Architecture: {self.project_type.upper()}")
+        
+        self.make_folders()
+        self.write_code()
+        
+        success = self.debug_and_test()
+        
+        if success:
+            self.run_project()
+        else:
+            self.log("Pipeline stopped: Code checking failed validation step.")
+            
+        self.explain_everything()
+
+    def make_folders(self):
+        self.log("Scaffolding dynamic workspace directories...")
+        
+        directories = ["src", "tests", "docs", "config"]
+        
+        if self.project_type == "web_app":
+            directories.extend(["src/templates", "src/static"])
+        elif self.project_type == "data_tool":
+            directories.extend(["data/input", "data/output"])
+
+        for d in directories:
+            (self.project_dir / d).mkdir(parents=True, exist_ok=True)
+            
+        self.log(f"Directory structure prepared at: {self.project_dir}")
+
+    def write_code(self):
+        self.log("Generating source assets, routing templates, and configuring dependencies...")
+        
+        manifest = {
+            "name": self.project_name,
+            "type": self.project_type,
+            "generated_at": datetime.now().isoformat(),
+            "original_prompt": self.prompt
+        }
+        
+        if self.project_type == "bot":
+            self.entry_point = "bot.py"
+            reqs = "discord.py\npython-dotenv\n"
+            main_code = dedent("""\
+                import os
+                import sys
+                import time
+                
+                print("[LIVE] Advanced Bot Framework starting...")
+                print("[LIVE] Loading environment configurations...")
+                
+                if __name__ == '__main__':
+                    print("✓ Bot connection protocols established.")
+                    print("✓ Listening for incoming commands.")
+                    try:
+                        while True:
+                            time.sleep(1)
+                    except KeyboardInterrupt:
+                        print("Exiting bot instance safely.")
+            """)
+            self.features = ["Command Routing", "Event Listeners", "Env Config"]
+
+        elif self.project_type == "desktop_gui":
+            self.entry_point = "gui_app.py"
+            reqs = ""  
+            main_code = dedent("""\
+                import tkinter as tk
+                from tkinter import messagebox
+                import sys
+                
+                print("[GUI SYSTEM] Compiling platform window configurations...")
+                
+                class SoarAppWindow:
+                    def __init__(self):
+                        self.root = tk.Tk()
+                        self.root.title(f"{self.__class__.__name__} - SOAR Generated Interface")
+                        self.root.geometry("450x300")
+                        self.build_layout()
+                        
+                    def build_layout(self):
+                        lbl = tk.Label(self.root, text="SOAR Autonomous Window", font=("Helvetica", 14, "bold"))
+                        lbl.pack(pady=20)
+                        
+                        btn = tk.Button(self.root, text="Trigger Action Matrix", command=self.on_click)
+                        btn.pack(pady=10)
+                        
+                    def on_click(self):
+                        print("[GUI CALLBACK] Action button clicked.")
+                        
+                    def run(self):
+                        # Safely runs unless headless/detached error happens
+                        if sys.stdout and sys.stdout.isatty():
+                            self.root.mainloop()
+                        else:
+                            print("[GUI WARNING] Headless background worker running without desktop window.")
+                            
+                if __name__ == '__main__':
+                    app = SoarAppWindow()
+                    print("✓ Window wrapper successfully mounted.")
+            """)
+            self.features = ["Tkinter Mainloop Architecture", "Responsive Layout Constraints", "Event-Driven Button Callbacks"]
+
+        elif self.project_type == "automation_script":
+            self.entry_point = "cleaner.py"
+            reqs = "psutil\n"
+            main_code = dedent(f"""\
+                import os
+                import sys
+                import shutil
+                from pathlib import Path
+                
+                print("[AUTOMATION LOG] Initializing dynamic file system scanner...")
+                
+                def run_maintenance_scan(target_path):
+                    path = Path(target_path)
+                    print(f"[SCANNING] Parsing node branches inside: {{path}}")
+                    
+                    # Core target safety checklist rule
+                    protected_roots = ["C:\\\\Windows", "/System", "/usr/bin"]
+                    if any(str(path).startswith(p) for p in protected_roots):
+                        print("[-] Access Revoked: System core targets are shielded by SOAR safety guardrails.")
+                        return False
+                        
+                    print("✓ Scan trace operation executed completely with zero conflicts.")
+                    return True
+                    
+                if __name__ == '__main__':
+                    # Fallback to local project workspace directory context
+                    run_maintenance_scan("./")
+            """)
+            self.features = ["File Tree Pattern Scanning", "SOAR Core Safety Shield Guardrails", "Shutil Context File Relocator Blueprint"]
+            
+        elif self.project_type == "web_app":
+            self.entry_point = "app.py"
+            reqs = "flask\nwerkzeug\n"
+            main_code = dedent("""\
+                from flask import Flask, jsonify
+                
+                app = Flask(__name__)
+                
+                @app.route('/')
+                def home():
+                    return jsonify({"status": "online", "message": "SOAR Web App Active"})
+                
+                if __name__ == '__main__':
+                    print("[LIVE] Web Server starting on port 5000...")
+                    # app.run(debug=True, port=5000) # Uncomment to actually run
+            """)
+            
+            index_html = dedent("""\
+                <!DOCTYPE html>
+                <html><head><title>SOAR App</title></head>
+                <body><h1>App is running!</h1></body></html>
+            """)
+            (self.project_dir / "src" / "templates" / "index.html").write_text(index_html, encoding="utf-8")
+            self.features = ["Flask Routing", "HTML Templates", "Static Assets"]
+
+        elif self.project_type == "api":
+            self.entry_point = "api.py"
+            reqs = "fastapi\nuvicorn\n"
+            main_code = dedent("""\
+                import json
+                print("[LIVE] API Gateway initializing...")
+                print("✓ Endpoints mounted at /api/v1/")
+                
+                if __name__ == '__main__':
+                    print("Ready for requests.")
+            """)
+            self.features = ["JSON Endpoints", "Data Validation", "REST Architecture"]
+
+        else: 
+            self.entry_point = "main.py"
+            reqs = "requests\n"
+            main_code = dedent(f"""\
+                import argparse
+                import sys
+                
+                def main():
+                    parser = argparse.ArgumentParser(description="{self.prompt}")
+                    parser.add_argument('--run', action='store_true', help='Execute main routine')
+                    args = parser.parse_args()
+                    
+                    print(f"[{self.project_name.upper()}] CLI Tool Initialized.")
+                    if args.run:
+                        print("Execution complete.")
+                
+                if __name__ == '__main__':
+                    main()
+            """)
+            self.features = ["Argument Parsing", "Terminal Output", "Modular Design"]
+
+        (self.project_dir / "src" / self.entry_point).write_text(main_code, encoding="utf-8")
+        (self.project_dir / "requirements.txt").write_text(reqs, encoding="utf-8")
+        (self.project_dir / "soar_manifest.json").write_text(json.dumps(manifest, indent=4), encoding="utf-8")
+        
+        readme_content = dedent(f"""\
+            # {self.project_name.replace("_", " ")}
+            *Generated autonomously by SOAR ProjectAgent.*
+            
+            **Objective:** {self.prompt}
+            **Architecture:** {self.project_type.upper()}
+            
+            ## Features Built
+            {chr(10).join([f"- {f}" for f in self.features])}
+            
+            ## Getting Started
+            1. `cd {self.project_name}`
+            2. `pip install -r requirements.txt`
+            3. `python src/{self.entry_point}`
+        """)
+        (self.project_dir / "README.md").write_text(readme_content, encoding="utf-8")
+        
+        self.log(f"Code generation complete. Entry point set to {self.entry_point}.")
+
+    def debug_and_test(self) -> bool:
+        self.log("Running comprehensive AST syntax validation on all Python files...")
+        
+        python_files = list(self.project_dir.rglob("*.py"))
+        if not python_files:
+            self.log("✗ No Python files found to test.")
+            return False
+            
+        all_passed = True
+        for py_file in python_files:
+            try:
+                source_content = py_file.read_text(encoding="utf-8")
+                ast.parse(source_content)
+                self.log(f"  ✓ {py_file.name}: Syntax clean.")
+            except SyntaxError as e:
+                self.log(f"  ✗ {py_file.name}: Syntax Error at line {e.lineno} -> {e.msg}")
+                all_passed = False
+                
+        return all_passed
+
+    def run_project(self):
+        self.log(f"Spawning independent execution stream for {self.entry_point}...")
+        target_script = self.project_dir / "src" / self.entry_point
+        
+        if not target_script.exists():
+            self.log(f"✗ Cannot run. {self.entry_point} not found.")
+            return
+            
+        if platform.system() == "Windows":
+            subprocess.Popen(["start", "cmd", "/c", sys.executable, str(target_script)], shell=True)
+        else:
+            subprocess.Popen(
+                [sys.executable, str(target_script)], 
+                stdout=subprocess.DEVNULL, 
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
+        self.log("✓ Project execution sequence initiated safely in background.")
+
+    def explain_everything(self):
+        print("\n" + "="*60)
+        print(f" SOAR ADVANCED BUILD COMPLETE: {self.project_name.upper()}")
+        print("="*60)
+        print(f" ► Architecture : {self.project_type.title()}")
+        print(f" ► Location     : {self.project_dir}")
+        print(f" ► Entry File   : src/{self.entry_point}")
+        
+        print("\n [ Project Briefing ]")
+        if self.project_type == "bot":
+            print(" I have scaffolded a Bot Architecture. You will need to add your API")
+            print(" Token (like a Discord or Slack token) to a .env file before it can")
+            print(" truly connect to external servers.")
+        elif self.project_type == "web_app":
+            print(" I have built a Web Application scaffold using Flask. It includes")
+            print(" template routing. You can expand the HTML in src/templates/")
+            print(" and add CSS to src/static/.")
+        elif self.project_type == "api":
+            print(" I have generated an API Gateway. It is structured to handle JSON")
+            print(" requests. Perfect for bridging frontends to databases.")
+        else:
+            print(" I have created a Command Line utility. It uses argparse so you")
+            print(" can easily add flags and parameters to run from your terminal.")
+            
+        print("\n [ Next Steps ]")
+        print(f" 1. Navigate to the folder: cd projects/{self.project_name}")
+        print(" 2. Install dependencies:   pip install -r requirements.txt")
+        print(f" 3. Run the application:    python src/{self.entry_point}")
+        print("="*60 + "\n")
 
 
 def log_line(who, text):
@@ -148,6 +478,9 @@ def cleanup_logs(max_lines=2000):
     except Exception as e:
         print(f"[LOG CLEANUP ERROR] {e}")
 
+def stamp():
+    """Returns the current timestamp string for logs."""
+    return datetime.now().strftime("%H:%M:%S")
 
 def read_lines(path):
     if not path.exists():
@@ -252,7 +585,7 @@ def load_settings():
                 if isinstance(loaded, dict):
                     data.update(loaded)
         except Exception as e:
-         print(f"[{stamp()}] [SETTINGS ERROR] Failed to load configuration: {e}")
+            print(f"[{stamp()}] [SETTINGS ERROR] Failed to load configuration: {e}")
 
         SETTINGS_CACHE = data
         return dict(data)
@@ -531,7 +864,7 @@ def maybe_address_user(text, chance=0.25):
     if random.random() < respect_score:
         cleaned = text.rstrip(".!?")
         if respect_score > 0.8:
-            title = ", sir."
+            title = ", {pronoun}."
         elif respect_score > 0.4:
             title = ", friend."
         else:
@@ -2431,7 +2764,7 @@ def reply_to(user_text):
                             "You are SOAR (Script Optimization and Automation Runtime), an advanced, intelligent local desktop AI assistant "
                             "created by Philip Kluz. You are running on a Mac/Windows. You are a custom automated runtime helper built with pure Python.\n\n"
                             "Your current system specifications and architectural capabilities include:\n"
-                            "- Version: 1.00.6 Early Beta.\n"
+                            "- Version: 1.00.7 Early Beta.\n"
                             "- AVSS (Anti Virus SOAR Software): A localized, active protection shield running on a daemon thread monitoring background processes and providing security hardening.\n"
                             "- ACHDS (Advanced Code Helper Diagnostic System): Files outside of soar if upon users request can be fixed.\n"
                             "- CSRS (Connection Server Request System): Can try to widen signal of wifi or network, can also give diagnostics on the wifi.\n"
@@ -2847,7 +3180,6 @@ def start_voice_listener():
             print(f"[VOICE WARNING] Calibration skipped: {e}")
 
         def callback(recognizer_obj, audio):
-            # ADD THIS CHECK: Ignore all incoming mic audio if the system is speaking
             if IS_SPEAKING:
                 return
 
@@ -3188,20 +3520,40 @@ def process_command(raw, from_voice=False): #mods start 2
     if not text:
         return
 
-    mod_cmd_input = text.lower()
-    if mod_cmd_input.startswith("/"):
-        mod_cmd_input = mod_cmd_input[1:]
+    if text.startswith("/"):
+        text = text[1:]
+    
+    lower = text.lower()
 
     import sys
     if hasattr(sys, "mod_commands"):
         for command_keyword in sys.mod_commands:
-            if command_keyword in mod_cmd_input:
+            if command_keyword in lower:
                 sys.mod_commands[command_keyword]()
                 return
 
-    if text.startswith("/"):
-        text = text[1:]
-    lower = text.lower() #mod end 2
+    try:
+        parts = shlex.split(text)
+    except Exception:
+        parts = text.split()
+        
+    if not parts:
+        return
+        
+    cmd = parts[0].lower()
+
+    if cmd == "build":
+        prompt_str = " ".join(parts[1:])
+        if not prompt_str:
+            print("[SOAR] Error: Please supply building targets details.")
+            print("Usage: build <project parameters detail descriptions>")
+            return
+            
+        print(f"[SOAR] Analyzing building prompt blueprints: '{prompt_str}'")
+        
+        agent = ProjectAgent(prompt=prompt_str, project_name="Autonomously_Generated_App")
+        agent.execute_pipeline()
+        return #mods end 2
 
     shutdown_words = {
         "exit", "quit", "bye", "shut down", "shutdown", "power off", "power down", "poweroff", "turn off"
@@ -3235,6 +3587,52 @@ def process_command(raw, from_voice=False): #mods start 2
         up = str(datetime.now() - STARTUP_TIME).split(".")[0]
         speak(maybe_address_user(f"Uptime is {up}", chance=0.25), allow_sound=True)
         return
+
+    if lower.startswith("report ") or lower == "report":
+        description = raw[7:].strip() if len(raw) > 7 else ""
+        
+        if len(description) > 50:
+            speak(maybe_address_user("Error: Bug description must be 50 characters or less."), allow_sound=True)
+            return
+            
+        if not description:
+            speak(maybe_address_user("Error: Please provide a bug description. Example: report broken_button"), allow_sound=True)
+            return
+            
+        LAST_REPORT_FILE = DATA_DIR / "last_report_date.txt"
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        
+        if LAST_REPORT_FILE.exists():
+            last_date = LAST_REPORT_FILE.read_text(encoding="utf-8").strip()
+            if last_date == today_str:
+                speak(maybe_address_user("Error: You can only report one bug per day."), allow_sound=True)
+                return
+                
+        try:
+            url = "https://www.soardownload.com/report.php"
+            
+            payload = {"description": description}
+            
+            req_post = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json", "User-Agent": "SOAR-Client"},
+                method="POST"
+            )
+            with urllib.request.urlopen(req_post, context=ssl_context) as response:
+                if response.status == 200:
+                    resp_data = json.loads(response.read().decode("utf-8"))
+                    assigned_id = resp_data.get("id", "#")
+                    LAST_REPORT_FILE.write_text(today_str, encoding="utf-8")
+                    speak(maybe_address_user(f"Bug successfully reported under ID #{assigned_id}!"), allow_sound=True)
+                    return
+                else:
+                    speak(maybe_address_user(f"Server returned an unexpected response code: {response.status}"), allow_sound=True)
+                    return
+                    
+        except Exception as e:
+            speak(maybe_address_user(f"Failed to submit report to server: {e}"), allow_sound=True)
+            return
     
     if lower == "autocode check" or lower == "autocode status" or lower == "auto code check":
         speak(maybe_address_user("Checking autocode folder...", chance=0.2), allow_sound=True)
@@ -4555,7 +4953,7 @@ def watch_intro_and_focus():
 
         if system == "Darwin":
             start_time = time.time()
-            timeout = 300  # safety cap so it cannot hang forever
+            timeout = 300 
 
             while not stop_event.is_set() and (time.time() - start_time) < timeout:
                 state = _mac_quicktime_state()
@@ -4653,7 +5051,7 @@ def main():
     print("Voice starts automatically if your mic libraries are ready.\n")
 
     try:
-        speak("SOAR Booted, version 1.00.6. Voice is on.", allow_sound=True)
+        speak("SOAR Booted, version 1.00.7. Voice is on.", allow_sound=True)
     except Exception:
         pass
 

@@ -1,12 +1,14 @@
 # ======================================
 # SOAR AVSS (Anti Virus SOAR Software)
-# V 1.0 
+# V 1.1
 # Made by Philip Kluz 2026 Jun 25 Late
 # SOAR Help Module #002
 # "ay ve es es"
 # ======================================
 
 import os
+import sys
+import psutil
 import time
 import threading
 from pathlib import Path
@@ -41,7 +43,7 @@ TTS_LOCK = threading.Lock()
 
 DESKTOP = Path.home() / "Desktop"
 if not DESKTOP.exists():
-    DESKTOP = None
+    DESKTOP = Path.home()
 
 _report_lock = threading.Lock()
 _report = {
@@ -147,6 +149,65 @@ def terminate_process(proc_pid):
         return not psutil.pid_exists(proc_pid)
     except Exception:
         return False
+
+def enforce_single_instance(stop_event=None):
+    """
+    Kills secondary SOAR launches immediately if another instance of soar_main.py is active.
+    """
+    my_pid = os.getpid()
+    target_script = "soar_main.py"
+
+    for proc in psutil.process_iter(['pid', 'cmdline']):
+        try:
+            cmdline = proc.info.get('cmdline') or []
+            full_cmd = " ".join(cmdline)
+            
+            if target_script in full_cmd and proc.info['pid'] != my_pid:
+                print("\n\033[31m[AVSS SECURITY THREAT DETECTED]\033[0m")
+                print("\033[33mDuplicate SOAR instance blocked! System locked to primary terminal window.\033[0m")
+                print("\033[36mTerminating secondary session...\033[0m\n")
+                time.sleep(0.5)
+                
+                if stop_event:
+                    stop_event.set()
+                
+                sys.exit(1)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+
+        except Exception as e:
+            pass
+
+def _scan_network_connections_once():
+    network_hits = 0
+    SUSPICIOUS_IPS = ["198.51.100.1"] 
+    SUSPICIOUS_PORTS = [4444, 6667]
+
+    try:
+        for conn in psutil.net_connections(kind='inet'):
+            if conn.status == 'ESTABLISHED' and conn.raddr:
+                remote_ip = conn.raddr.ip
+                remote_port = conn.raddr.port
+                
+                if remote_ip in SUSPICIOUS_IPS or remote_port in SUSPICIOUS_PORTS:
+                    key = f"suspicious-net::{remote_ip}::{remote_port}"
+                    if _should_emit(key):
+                        network_hits += 1
+                        _record_item(
+                            kind="network",
+                            severity="critical",
+                            title="Suspicious Network Connection Detected",
+                            details={"ip": remote_ip, "port": remote_port, "pid": conn.pid},
+                            action="queued_for_review",
+                            status="pending"
+                        )
+    except psutil.AccessDenied:
+        pass 
+    except Exception as e:
+        with _report_lock:
+            _report["errors"] += 1
+            
+    return {"network_hits": network_hits}
 
 
 def _scan_processes_once():

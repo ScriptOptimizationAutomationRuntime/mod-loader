@@ -13,6 +13,7 @@ import sys
 import threading
 import time
 from statistics import mean
+import soar_avss 
 
 GREEN = "\033[38;5;22m"
 RED = "\033[31m"
@@ -746,6 +747,19 @@ def attempt_recovery_step(attempt_number, score):
 
 def auto_recover_until_good(targets, duplicates=None):
     clear_screen()
+    
+    section("AVSS SECURITY SWEEP")
+    slow_print("Checking for malicious network interference...", color=CYAN)
+    
+    avss_report = soar_avss.scan_once()
+    
+    if avss_report.get("suspicious_count", 0) > 0:
+        slow_print("[CRITICAL] AVSS detected suspicious background activity!", color=RED)
+        slow_print("Review AVSS logs immediately. Network diagnostics may be compromised.", color=YELLOW)
+        time.sleep(2)
+    else:
+        slow_print("[OK] No active network threats detected.", color=GREEN)
+
     render_overview("run", "run", targets, TIMEOUT_SECONDS, duplicates)
 
     if not targets:
@@ -794,8 +808,25 @@ def auto_recover_until_good(targets, duplicates=None):
         render_summary(best_results, best_problems, duplicates)
 
 
-def mode_run(arg, targets, duplicates):
+def mode_run(raw, targets, duplicates=None):
     auto_recover_until_good(targets, duplicates)
+    clear_screen()
+    
+    slow_print("==========================================")
+    slow_print("   RUNNING AVSS SECURITY SWEEP...         ", color=CYAN)
+    slow_print("==========================================")
+    
+    avss_report = soar_avss.scan_once()
+    
+    if avss_report.get("suspicious_count", 0) > 0 or avss_report.get("process_hits", 0) > 0:
+        slow_print("[!] WARNING: AVSS flagged potential background security threats!", color=RED)
+    else:
+        slow_print("[OK] AVSS scan complete: No active local threats detected.", color=GREEN)
+    
+    slow_print("")
+    time.sleep(1)
+
+    render_overview("run", "run", targets, TIMEOUT_SECONDS, duplicates)
 
 
 def mode_fix(arg, targets, duplicates):
